@@ -27,7 +27,8 @@ goos: linux
 goarch: amd64
 pkg: github.com/shenwei356/bench/bitwise-and-on-byte-slices
 cpu: AMD Ryzen 7 2700X Eight-Core Processor         
-BenchmarkLoop-16                   14467             84265 ns/op
-BenchmarkUnrollLoop-16             17668             67550 ns/op
+BenchmarkLoop-16                   14581             81597 ns/op
+BenchmarkUnrollLoop-16             18456             64794 ns/op
+BenchmarkGrailbio-16               46098             25864 ns/op
 
 ```

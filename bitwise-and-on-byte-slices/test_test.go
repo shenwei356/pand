@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"math/rand"
 	"testing"
+
+	"github.com/grailbio/base/simd"
 )
 
 var matrix [][]byte
@@ -52,6 +54,10 @@ func Test(t *testing.T) {
 		if !bytes.Equal(loop(data), unroll(data)) {
 			t.Errorf("error")
 		}
+
+		if !bytes.Equal(loop(data), grailbio(data)) {
+			t.Errorf("error grailbio")
+		}
 	}
 }
 
@@ -88,6 +94,25 @@ func BenchmarkUnrollLoop(b *testing.B) {
 			}
 
 			and = unroll(data)
+		}
+	}
+	AND = and
+}
+
+func BenchmarkGrailbio(b *testing.B) {
+	var and []byte
+	data := make([][]byte, 0, 8)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var p int
+		for _, pos := range positions {
+			data = data[:0] // subset of matrix
+			for _, p = range pos {
+				data = append(data, matrix[p])
+			}
+
+			and = grailbio(data)
 		}
 	}
 	AND = and
@@ -162,6 +187,27 @@ func unroll(data [][]byte) []byte {
 			and[i] &= b
 			i++
 		}
+	}
+	return and
+}
+
+func grailbio(data [][]byte) []byte {
+	// if len(data) < 2 {
+	// 	panic("input matrix should have >=2 rows")
+	// }
+	// if len(data[0]) == 0 {
+	// 	panic("input matrix should have >0 columns")
+	// }
+
+	and := make([]byte, len(data[0]))
+	copy(and, data[0]) // copy the first row
+
+	for _, row := range data[1:] { // left rows
+		// if len(row) != len(data[0]) {
+		// 	panic("column lengths should be consistant")
+		// }
+
+		simd.AndUnsafeInplace(and, row)
 	}
 	return and
 }
