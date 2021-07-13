@@ -6,14 +6,18 @@ import (
 	"testing"
 
 	"github.com/grailbio/base/simd"
+	"github.com/shenwei356/bench/bitwise-and-on-byte-slices/pand"
 )
 
 var matrix [][]byte
 var positions [][]int
 
+var ncols int
+var nrows int
+
 func init() {
-	ncols := 256
-	nrows := 1024
+	ncols = 123
+	nrows = 1024
 
 	rand.Seed(1)
 
@@ -42,6 +46,7 @@ func init() {
 var AND []byte
 
 func Test(t *testing.T) {
+	and := make([]byte, ncols)
 	data := make([][]byte, 0, 8)
 
 	var p int
@@ -51,18 +56,22 @@ func Test(t *testing.T) {
 			data = append(data, matrix[p])
 		}
 
-		if !bytes.Equal(loop(data), unroll(data)) {
+		if !bytes.Equal(loop(and, data), unroll(and, data)) {
 			t.Errorf("error")
 		}
 
-		if !bytes.Equal(loop(data), grailbio(data)) {
+		if !bytes.Equal(loop(and, data), grailbio(and, data)) {
 			t.Errorf("error grailbio")
+		}
+
+		if !bytes.Equal(loop(and, data), avx2(and, data)) {
+			t.Errorf("error avx2")
 		}
 	}
 }
 
 func BenchmarkLoop(b *testing.B) {
-	var and []byte
+	and := make([]byte, ncols)
 	data := make([][]byte, 0, 8)
 
 	b.ResetTimer()
@@ -74,14 +83,14 @@ func BenchmarkLoop(b *testing.B) {
 				data = append(data, matrix[p])
 			}
 
-			and = loop(data)
+			and = loop(and, data)
 		}
 	}
 	AND = and
 }
 
 func BenchmarkUnrollLoop(b *testing.B) {
-	var and []byte
+	and := make([]byte, ncols)
 	data := make([][]byte, 0, 8)
 
 	b.ResetTimer()
@@ -93,14 +102,14 @@ func BenchmarkUnrollLoop(b *testing.B) {
 				data = append(data, matrix[p])
 			}
 
-			and = unroll(data)
+			and = unroll(and, data)
 		}
 	}
 	AND = and
 }
 
 func BenchmarkGrailbio(b *testing.B) {
-	var and []byte
+	and := make([]byte, ncols)
 	data := make([][]byte, 0, 8)
 
 	b.ResetTimer()
@@ -112,7 +121,26 @@ func BenchmarkGrailbio(b *testing.B) {
 				data = append(data, matrix[p])
 			}
 
-			and = grailbio(data)
+			and = grailbio(and, data)
+		}
+	}
+	AND = and
+}
+
+func BenchmarkGoAsmAVX2(b *testing.B) {
+	and := make([]byte, ncols)
+	data := make([][]byte, 0, 8)
+
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		var p int
+		for _, pos := range positions {
+			data = data[:0] // subset of matrix
+			for _, p = range pos {
+				data = append(data, matrix[p])
+			}
+
+			and = avx2(and, data)
 		}
 	}
 	AND = and
@@ -120,7 +148,7 @@ func BenchmarkGrailbio(b *testing.B) {
 
 // the input data is a byte matrix,
 // this function proceeds bitwise AND operation on every column.
-func loop(data [][]byte) []byte {
+func loop(and []byte, data [][]byte) []byte {
 	// if len(data) < 2 {
 	// 	panic("input matrix should have >=2 rows")
 	// }
@@ -128,7 +156,6 @@ func loop(data [][]byte) []byte {
 	// 	panic("input matrix should have >0 columns")
 	// }
 
-	and := make([]byte, len(data[0]))
 	copy(and, data[0]) // copy the first row
 
 	var i int
@@ -145,7 +172,7 @@ func loop(data [][]byte) []byte {
 	return and
 }
 
-func unroll(data [][]byte) []byte {
+func unroll(and []byte, data [][]byte) []byte {
 	// if len(data) < 2 {
 	// 	panic("input matrix should have >=2 rows")
 	// }
@@ -153,7 +180,6 @@ func unroll(data [][]byte) []byte {
 	// 	panic("input matrix should have >0 columns")
 	// }
 
-	and := make([]byte, len(data[0]))
 	copy(and, data[0])
 
 	var i int
@@ -191,7 +217,7 @@ func unroll(data [][]byte) []byte {
 	return and
 }
 
-func grailbio(data [][]byte) []byte {
+func grailbio(and []byte, data [][]byte) []byte {
 	// if len(data) < 2 {
 	// 	panic("input matrix should have >=2 rows")
 	// }
@@ -199,7 +225,6 @@ func grailbio(data [][]byte) []byte {
 	// 	panic("input matrix should have >0 columns")
 	// }
 
-	and := make([]byte, len(data[0]))
 	copy(and, data[0]) // copy the first row
 
 	for _, row := range data[1:] { // left rows
@@ -208,6 +233,26 @@ func grailbio(data [][]byte) []byte {
 		// }
 
 		simd.AndUnsafeInplace(and, row)
+	}
+	return and
+}
+
+func avx2(and []byte, data [][]byte) []byte {
+	// if len(data) < 2 {
+	// 	panic("input matrix should have >=2 rows")
+	// }
+	// if len(data[0]) == 0 {
+	// 	panic("input matrix should have >0 columns")
+	// }
+
+	copy(and, data[0]) // copy the first row
+
+	for _, row := range data[1:] { // left rows
+		// if len(row) != len(data[0]) {
+		// 	panic("column lengths should be consistant")
+		// }
+
+		pand.PAND(and, row)
 	}
 	return and
 }
