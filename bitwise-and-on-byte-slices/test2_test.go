@@ -29,7 +29,7 @@ func randByteSlice(n int) []byte {
 	return s
 }
 
-func Test2(t *testing.T) {
+func TestAll2(t *testing.T) {
 	for i := range data2 {
 		size := len(data2[i][0])
 		x := data2[i][0]

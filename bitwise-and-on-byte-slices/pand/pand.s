@@ -16,6 +16,39 @@ TEXT ·PAND(SB), NOSPLIT|NOPTR, $0-48
 
 	// --------------------------------------------
 	VXORPD Y0, Y0, Y0
+	VXORPD Y1, Y1, Y1
+	VXORPD Y2, Y2, Y2
+	VXORPD Y3, Y3, Y3
+
+blockloop:
+	// check number of left elements
+	CMPQ CX, $0x00000080
+	JL   loop32
+
+	// compute bitwise AND and save the value back to *x
+	VMOVAPD (AX), Y0
+	VMOVAPD 32(AX), Y1
+	VMOVAPD 64(AX), Y2
+	VMOVAPD 96(AX), Y3
+	VPAND   (DX), Y0, Y0
+	VPAND   32(DX), Y1, Y1
+	VPAND   64(DX), Y2, Y2
+	VPAND   96(DX), Y3, Y3
+	VMOVAPD Y0, (AX)
+	VMOVAPD Y1, 32(AX)
+	VMOVAPD Y2, 64(AX)
+	VMOVAPD Y3, 96(AX)
+
+	// move pointer
+	ADDQ $0x00000080, AX
+	ADDQ $0x00000080, DX
+
+	// number of left elements
+	SUBQ $0x00000080, CX
+	JMP  blockloop
+
+	// --------------------------------------------
+	VXORPD Y0, Y0, Y0
 
 loop32:
 	// check number of left elements

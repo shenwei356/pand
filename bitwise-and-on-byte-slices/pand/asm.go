@@ -6,7 +6,10 @@ package main
 import (
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
+	. "github.com/mmcloughlin/avo/reg"
 )
+
+var unroll = 4
 
 func main() {
 	TEXT("PAND", NOSPLIT|NOPTR, "func(x []byte, y []byte)")
@@ -17,6 +20,49 @@ func main() {
 
 	Comment("pointer of y")
 	y := Mem{Base: Load(Param("y").Base(), GP64())}
+
+	// ------------------
+
+	Comment("--------------------------------------------")
+
+	ss := make([]VecVirtual, unroll)
+	for i := 0; i < unroll; i++ {
+		ss[i] = YMM()
+	}
+	for i := 0; i < unroll; i++ {
+		VXORPD(ss[i], ss[i], ss[i])
+	}
+
+	Label("blockloop")
+
+	blockitems := 8 * unroll
+	blocksize := 4 * blockitems
+
+	Comment("check number of left elements")
+	CMPQ(n, U32(blocksize))
+	JL(LabelRef("loop32"))
+
+	Comment("compute bitwise AND and save the value back to *x")
+	// VMOVAPD(x.Offset(0), s)
+	// VPAND(y.Offset(0), s, s)
+	// VMOVAPD(s, x.Offset(0))
+	for i := 0; i < unroll; i++ {
+		VMOVAPD(x.Offset(32*i), ss[i])
+	}
+	for i := 0; i < unroll; i++ {
+		VPAND(y.Offset(32*i), ss[i], ss[i])
+	}
+	for i := 0; i < unroll; i++ {
+		VMOVAPD(ss[i], x.Offset(32*i))
+	}
+
+	Comment("move pointer")
+	ADDQ(U32(blocksize), x.Base)
+	ADDQ(U32(blocksize), y.Base)
+
+	Comment("number of left elements")
+	SUBQ(U32(blocksize), n)
+	JMP(LabelRef("blockloop"))
 
 	// ------------------
 
