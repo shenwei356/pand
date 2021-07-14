@@ -22,15 +22,15 @@ TEXT ·PAND(SB), NOSPLIT|NOPTR, $0-48
 	// end address for loop
 	// n <= 8, jump to tail
 	CMPQ CX, $0x00000008
-	JBE  tail
+	JLE  tail
 
 	// n < 16, jump to loop8
 	CMPQ CX, $0x00000010
-	JB   loop8_start
+	JL   loop8_start
 
 	// n < 32, jump to loop16
 	CMPQ CX, $0x00000020
-	JB   loop16_start
+	JL   loop16_start
 
 	// --------------------------------------------
 	// end address for loop32
@@ -47,17 +47,17 @@ loop32:
 	ADDQ $0x00000020, AX
 	ADDQ $0x00000020, DX
 	CMPQ AX, CX
-	JB   loop32
+	JL   loop32
 
 	// n <= 8, jump to tail
 	MOVQ BX, CX
 	SUBQ AX, CX
 	CMPQ CX, $0x00000008
-	JBE  tail
+	JLE  tail
 
 	// n < 16, jump to loop8
 	CMPQ CX, $0x00000010
-	JB   loop8_start
+	JL   loop8_start
 
 	// --------------------------------------------
 loop16_start:
@@ -75,13 +75,13 @@ loop16:
 	ADDQ $0x00000010, AX
 	ADDQ $0x00000010, DX
 	CMPQ AX, CX
-	JB   loop16
+	JL   loop16
 
 	// n <= 8, jump to tail
 	MOVQ BX, CX
 	SUBQ AX, CX
 	CMPQ CX, $0x00000008
-	JBE  tail
+	JLE  tail
 
 	// --------------------------------------------
 loop8_start:
@@ -99,7 +99,7 @@ loop8:
 	ADDQ $0x00000008, AX
 	ADDQ $0x00000008, DX
 	CMPQ AX, CX
-	JB   loop8
+	JL   loop8
 
 	// --------------------------------------------
 tail:
