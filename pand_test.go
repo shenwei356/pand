@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/grailbio/base/simd"
+	"github.com/shenwei356/bench/bitwise-and-on-byte-slices/pand"
 	"github.com/shenwei356/util/bytesize"
 )
 
@@ -17,7 +18,6 @@ var data2 [][2][]byte
 func init() {
 	// for test
 	sizes := []int{0, 1, 3, 7, 8, 9, 15, 16, 17, 31, 32, 33, 47, 48, 49, 71, 72, 73, 127, 128, 129, 1 << 7, 1 << 10, 1 << 16}
-	// sizes := []int{33}
 
 	data = make([][2][]byte, len(sizes))
 	for i, s := range sizes {
@@ -41,13 +41,36 @@ func randByteSlice(n int) []byte {
 	return s
 }
 
+func TestGoAsm(t *testing.T) {
+	a := []byte{
+		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+		3, // 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+		// 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+		// 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+		// 3, 3, 3,
+	}
+	b := []byte{
+		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+		2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+		2, 2, 2,
+	}
+
+	fmt.Println(len(a), cap(a), a)
+	pand.PAND(a, b)
+	fmt.Println(len(a), cap(a), a)
+}
+
 func TestAll(t *testing.T) {
 	for i := range data {
 		x := data[i][0]
 		size := len(x)
 		y := data[i][1]
 
-		fmt.Printf("tesing size: %d ... ", size)
+		fmt.Printf("testing size: %d ... ", size)
 
 		and1 := make([]byte, size)
 		copy(and1, x)
@@ -58,7 +81,7 @@ func TestAll(t *testing.T) {
 		unroll(and2, y)
 
 		if !bytes.Equal(and1, and2) {
-			t.Errorf("oh no")
+			t.Errorf("oh no，unroll error")
 		}
 
 		and3 := make([]byte, size)
@@ -71,15 +94,10 @@ func TestAll(t *testing.T) {
 
 		and4 := make([]byte, size)
 		copy(and4, x)
-		fmt.Println()
-		fmt.Println(len(and4), cap(and4), and4)
-		fmt.Println(len(y), cap(y), y)
 		goasm(and4, y)
 
 		if !bytes.Equal(and1, and4) {
 			t.Errorf("oh no, goasm error")
-			// fmt.Println(len(and1), and1)
-			// fmt.Println(len(and4), and4)
 			return
 		}
 

@@ -15,29 +15,20 @@ TEXT ·PAND(SB), NOSPLIT|NOPTR, $0-48
 	MOVQ y_base+24(FP), DX
 
 	// --------------------------------------------
-	// end address of x, will not change: p + n
-	MOVQ AX, BX
-	ADDQ CX, BX
-
-	// end address for loop
-	// n <= 8, jump to tail
+	// check number of left elements
 	CMPQ CX, $0x00000008
-	JBE  tail
-
-	// n < 16, jump to loop8
+	JL   tail
 	CMPQ CX, $0x00000010
-	JB   loop8_start
-
-	// n < 32, jump to loop16
+	JL   loop8
 	CMPQ CX, $0x00000020
-	JB   loop16_start
+	JL   loop16
 
 	// --------------------------------------------
-	// end address for loop32
-	MOVQ BX, CX
-	SUBQ $0x0000001f, CX
-
 loop32:
+	// check number of left elements
+	CMPQ CX, $0x00000020
+	JL   loop16
+
 	// compute x & y, and save value to x
 	VMOVDQA (AX), Y0
 	VANDPS  (DX), Y0, Y0
@@ -46,26 +37,15 @@ loop32:
 	// move pointer
 	ADDQ $0x00000020, AX
 	ADDQ $0x00000020, DX
-	CMPQ AX, CX
-	JB   loop32
-
-	// n <= 8, jump to tail
-	MOVQ BX, CX
-	SUBQ AX, CX
-	CMPQ CX, $0x00000008
-	JBE  tail
-
-	// n < 16, jump to loop8
-	CMPQ CX, $0x00000010
-	JB   loop8_start
+	SUBQ $0x00000020, CX
+	JMP  loop32
 
 	// --------------------------------------------
-loop16_start:
-	// end address for loop16
-	MOVQ BX, CX
-	SUBQ $0x0000000f, CX
-
 loop16:
+	// check number of left elements
+	CMPQ CX, $0x00000010
+	JL   loop8
+
 	// compute x & y, and save value to x
 	VMOVDQA (AX), X0
 	VANDPS  (DX), X0, X0
@@ -74,22 +54,15 @@ loop16:
 	// move pointer
 	ADDQ $0x00000010, AX
 	ADDQ $0x00000010, DX
-	CMPQ AX, CX
-	JB   loop16
-
-	// n <= 8, jump to tail
-	MOVQ BX, CX
-	SUBQ AX, CX
-	CMPQ CX, $0x00000008
-	JBE  tail
+	SUBQ $0x00000010, CX
+	JMP  loop16
 
 	// --------------------------------------------
-loop8_start:
-	// end address for loop8
-	MOVQ BX, CX
-	SUBQ $0x00000007, CX
-
 loop8:
+	// check number of left elements
+	CMPQ CX, $0x00000008
+	JL   tail
+
 	// compute x & y, and save value to x
 	MOVQ (AX), BX
 	ANDQ (DX), BX
@@ -98,8 +71,8 @@ loop8:
 	// move pointer
 	ADDQ $0x00000008, AX
 	ADDQ $0x00000008, DX
-	CMPQ AX, CX
-	JB   loop8
+	SUBQ $0x00000008, CX
+	JMP  loop8
 
 	// --------------------------------------------
 tail:
