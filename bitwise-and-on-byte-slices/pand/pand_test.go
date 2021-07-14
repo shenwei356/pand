@@ -1,4 +1,4 @@
-package bitwiseandonbyteslices
+package pand
 
 import (
 	"bytes"
@@ -6,17 +6,27 @@ import (
 	"testing"
 
 	"github.com/grailbio/base/simd"
-	"github.com/shenwei356/bench/bitwise-and-on-byte-slices/pand"
 	"github.com/shenwei356/util/bytesize"
 )
+
+var data [][2][]byte
 
 var data2 [][2][]byte
 
 func init() {
-	sizes := []int{1 << 7, 1 << 10, 1 << 16}
+	// for test
+	sizes := []int{0, 1, 7, 8, 9, 31, 32, 127, 128, 129, 1 << 7, 1 << 10, 1 << 16}
 
-	data2 = make([][2][]byte, len(sizes))
+	data = make([][2][]byte, len(sizes))
 	for i, s := range sizes {
+		data[i] = [2][]byte{randByteSlice(s), randByteSlice(s)}
+	}
+
+	// for benchmark
+	sizes2 := []int{7, 32, 128, 1 << 8, 1 << 10, 1 << 16}
+
+	data2 = make([][2][]byte, len(sizes2))
+	for i, s := range sizes2 {
 		data2[i] = [2][]byte{randByteSlice(s), randByteSlice(s)}
 	}
 }
@@ -29,19 +39,19 @@ func randByteSlice(n int) []byte {
 	return s
 }
 
-func TestAll2(t *testing.T) {
-	for i := range data2 {
-		size := len(data2[i][0])
-		x := data2[i][0]
-		y := data2[i][1]
+func TestAll(t *testing.T) {
+	for i := range data {
+		x := data[i][0]
+		size := len(x)
+		y := data[i][1]
 
 		and1 := make([]byte, size)
 		copy(and1, x)
-		loop2(and1, y)
+		loop(and1, y)
 
 		and2 := make([]byte, size)
 		copy(and2, x)
-		unroll2(and2, y)
+		unroll(and2, y)
 
 		if !bytes.Equal(and1, and2) {
 			t.Errorf("oh no")
@@ -49,7 +59,7 @@ func TestAll2(t *testing.T) {
 
 		and3 := make([]byte, size)
 		copy(and3, x)
-		grailbio2(and3, y)
+		grailbio(and3, y)
 
 		if !bytes.Equal(and1, and3) {
 			t.Errorf("oh no, grailbio error")
@@ -57,21 +67,24 @@ func TestAll2(t *testing.T) {
 
 		and4 := make([]byte, size)
 		copy(and4, x)
-		goasmavx2(and4, y)
+		goasm(and4, y)
 
 		if !bytes.Equal(and1, and4) {
-			t.Errorf("oh no, avx2 error")
+			t.Errorf("oh no,  error")
+			// fmt.Println(len(and1), and1)
+			// fmt.Println(len(and4), and4)
+			return
 		}
 	}
 }
 
-func loop2(x, y []byte) {
+func loop(x, y []byte) {
 	for k, b := range y {
 		x[k] &= b
 	}
 }
 
-func unroll2(x, y []byte) {
+func unroll(x, y []byte) {
 	k := 0
 	for len(y) >= 8 { // unroll loop
 		x[k] &= y[0]
@@ -98,15 +111,15 @@ func unroll2(x, y []byte) {
 	}
 }
 
-func grailbio2(x, y []byte) {
+func grailbio(x, y []byte) {
 	simd.AndUnsafeInplace(x, y)
 }
 
-func goasmavx2(x, y []byte) {
-	pand.PAND(x, y)
+func goasm(x, y []byte) {
+	PAND(x, y)
 }
 
-func Benchmark2Loop(b *testing.B) {
+func BenchmarkLoop(b *testing.B) {
 	for i := range data2 {
 		size := len(data2[i][0])
 		x := data2[i][0]
@@ -116,13 +129,13 @@ func Benchmark2Loop(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				loop2(and, y)
+				loop(and, y)
 			}
 		})
 	}
 }
 
-func Benchmark2UnrollLoop(b *testing.B) {
+func BenchmarkUnrollLoop(b *testing.B) {
 	for i := range data2 {
 		size := len(data2[i][0])
 		x := data2[i][0]
@@ -132,13 +145,13 @@ func Benchmark2UnrollLoop(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				unroll2(and, y)
+				unroll(and, y)
 			}
 		})
 	}
 }
 
-func Benchmark2Grailbio(b *testing.B) {
+func BenchmarkGrailbio(b *testing.B) {
 	for i := range data2 {
 		size := len(data2[i][0])
 		x := data2[i][0]
@@ -148,13 +161,13 @@ func Benchmark2Grailbio(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				grailbio2(and, y)
+				grailbio(and, y)
 			}
 		})
 	}
 }
 
-func Benchmark2GoAsmAvx2(b *testing.B) {
+func BenchmarkGoAsm(b *testing.B) {
 	for i := range data2 {
 		size := len(data2[i][0])
 		x := data2[i][0]
@@ -164,7 +177,7 @@ func Benchmark2GoAsmAvx2(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				goasmavx2(and, y)
+				goasm(and, y)
 			}
 		})
 	}
