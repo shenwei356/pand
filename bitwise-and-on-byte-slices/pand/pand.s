@@ -3,7 +3,7 @@
 #include "textflag.h"
 
 // func PAND(x []byte, y []byte)
-// Requires: AVX, AVX2
+// Requires: AVX
 TEXT ·PAND(SB), NOSPLIT|NOPTR, $0-48
 	// pointer of x
 	MOVQ x_base+0(FP), AX
@@ -15,83 +15,53 @@ TEXT ·PAND(SB), NOSPLIT|NOPTR, $0-48
 	MOVQ y_base+24(FP), DX
 
 	// --------------------------------------------
-	VXORPD Y0, Y0, Y0
-	VXORPD Y1, Y1, Y1
-	VXORPD Y2, Y2, Y2
-	VXORPD Y3, Y3, Y3
+	// end address of x
+	MOVQ AX, BX
+	ADDQ CX, BX
 
-blockloop:
-	// check number of left elements
-	CMPQ CX, $0x00000080
-	JL   loop32
+	// end address for loop
+	MOVQ BX, SI
 
-	// compute bitwise AND and save the value back to *x
-	VMOVAPD (AX), Y0
-	VMOVAPD 32(AX), Y1
-	VMOVAPD 64(AX), Y2
-	VMOVAPD 96(AX), Y3
-	VPAND   (DX), Y0, Y0
-	VPAND   32(DX), Y1, Y1
-	VPAND   64(DX), Y2, Y2
-	VPAND   96(DX), Y3, Y3
-	VMOVAPD Y0, (AX)
-	VMOVAPD Y1, 32(AX)
-	VMOVAPD Y2, 64(AX)
-	VMOVAPD Y3, 96(AX)
-
-	// move pointer
-	ADDQ $0x00000080, AX
-	ADDQ $0x00000080, DX
-
-	// number of left elements
-	SUBQ $0x00000080, CX
-	JMP  blockloop
+	// n < 32, jump to loop8
+	CMPQ CX, $0x00000020
+	JB   loop8_start
 
 	// --------------------------------------------
-	VXORPD Y0, Y0, Y0
+	// end address for loop32
+	SUBQ $0x0000001f, SI
 
 loop32:
-	// check number of left elements
-	CMPQ CX, $0x00000020
-	JL   loop8
-
-	// compute bitwise AND and save the value back to *x
-	VMOVAPD (AX), Y0
-	VPAND   (DX), Y0, Y0
-	VMOVAPD Y0, (AX)
+	// compute x & y, and save value to x
+	VMOVDQA (AX), Y0
+	VANDPS  (DX), Y0, Y0
+	VMOVDQA Y0, (AX)
 
 	// move pointer
 	ADDQ $0x00000020, AX
 	ADDQ $0x00000020, DX
-
-	// number of left elements
-	SUBQ $0x00000020, CX
-	JMP  loop32
+	CMPQ AX, SI
+	JB   loop32
 
 	// --------------------------------------------
-	XORQ BX, BX
+loop8_start:
+	// end address for loop8
+	SUBQ $0x00000008, BX
 
 loop8:
-	// check number of left elements
-	CMPQ CX, $0x00000008
-	JL   end
-
-	// compute bitwise AND and save the value back to *x
-	MOVQ (AX), BX
-	ANDQ (DX), BX
-	MOVQ BX, (AX)
+	// compute x & y, and save value to x
+	MOVQ (AX), CX
+	ANDQ (DX), CX
+	MOVQ CX, (AX)
 
 	// move pointer
 	ADDQ $0x00000008, AX
 	ADDQ $0x00000008, DX
-
-	// number of left elements
-	SUBQ $0x00000008, CX
-	JMP  loop8
+	CMPQ AX, BX
+	JB   loop8
 
 	// --------------------------------------------
-end:
-	MOVQ (AX), BX
-	ANDQ (DX), BX
-	MOVQ BX, (AX)
+	// left elements (<8)
+	MOVQ (AX), CX
+	ANDQ (DX), CX
+	MOVQ CX, (AX)
 	RET

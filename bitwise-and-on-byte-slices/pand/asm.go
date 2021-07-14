@@ -6,13 +6,11 @@ package main
 import (
 	. "github.com/mmcloughlin/avo/build"
 	. "github.com/mmcloughlin/avo/operand"
-	. "github.com/mmcloughlin/avo/reg"
 )
-
-var unroll = 4
 
 func main() {
 	TEXT("PAND", NOSPLIT|NOPTR, "func(x []byte, y []byte)")
+
 	Comment("pointer of x")
 	x := Mem{Base: Load(Param("x").Base(), GP64())}
 	Comment("length of x")
@@ -21,111 +19,71 @@ func main() {
 	Comment("pointer of y")
 	y := Mem{Base: Load(Param("y").Base(), GP64())}
 
-	// ------------------
+	Comment("--------------------------------------------")
+
+	Comment("end address of x")
+	end0 := GP64()
+	MOVQ(x.Base, end0)
+	ADDQ(n, end0)
+
+	Comment("end address for loop")
+	end := GP64()
+	MOVQ(end0, end)
+
+	Comment("n < 32, jump to loop8")
+	CMPQ(n, U32(32))
+	JB(LabelRef("loop8_start"))
 
 	Comment("--------------------------------------------")
 
-	ss := make([]VecVirtual, unroll)
-	for i := 0; i < unroll; i++ {
-		ss[i] = YMM()
-	}
-	for i := 0; i < unroll; i++ {
-		VXORPD(ss[i], ss[i], ss[i])
-	}
-
-	Label("blockloop")
-
-	blockitems := 8 * unroll
-	blocksize := 4 * blockitems
-
-	Comment("check number of left elements")
-	CMPQ(n, U32(blocksize))
-	JL(LabelRef("loop32"))
-
-	Comment("compute bitwise AND and save the value back to *x")
-	// VMOVAPD(x.Offset(0), s)
-	// VPAND(y.Offset(0), s, s)
-	// VMOVAPD(s, x.Offset(0))
-	for i := 0; i < unroll; i++ {
-		VMOVAPD(x.Offset(32*i), ss[i])
-	}
-	for i := 0; i < unroll; i++ {
-		VPAND(y.Offset(32*i), ss[i], ss[i])
-	}
-	for i := 0; i < unroll; i++ {
-		VMOVAPD(ss[i], x.Offset(32*i))
-	}
-
-	Comment("move pointer")
-	ADDQ(U32(blocksize), x.Base)
-	ADDQ(U32(blocksize), y.Base)
-
-	Comment("number of left elements")
-	SUBQ(U32(blocksize), n)
-	JMP(LabelRef("blockloop"))
-
-	// ------------------
-
-	Comment("--------------------------------------------")
+	Comment("end address for loop32")
+	SUBQ(U32(31), end)
 
 	s := YMM()
-	VXORPD(s, s, s)
 
 	Label("loop32")
 
-	Comment("check number of left elements")
-	CMPQ(n, U32(32)) // 256/8
-	JL(LabelRef("loop8"))
-
-	Comment("compute bitwise AND and save the value back to *x")
-	VMOVAPD(x.Offset(0), s)
-	VPAND(y.Offset(0), s, s)
-	// VANDPD(y.Offset(0), s, s)
-	VMOVAPD(s, x.Offset(0))
+	Comment("compute x & y, and save value to x")
+	VMOVDQA(x.Offset(0), s)
+	VANDPS(y.Offset(0), s, s)
+	VMOVDQA(s, x.Offset(0))
 
 	Comment("move pointer")
 	ADDQ(U32(32), x.Base)
 	ADDQ(U32(32), y.Base)
 
-	Comment("number of left elements")
-	SUBQ(U32(32), n) // 256/8
-	JMP(LabelRef("loop32"))
-
-	// ------------------
+	CMPQ(x.Base, end)
+	JB(LabelRef("loop32"))
 
 	Comment("--------------------------------------------")
 
-	w := GP64()
-	XORQ(w, w)
+	Label("loop8_start")
+
+	Comment("end address for loop8")
+	SUBQ(U32(8), end0)
+
+	t := GP64()
 
 	Label("loop8")
 
-	Comment("check number of left elements")
-	CMPQ(n, U32(8)) // 256/8/8
-	JL(LabelRef("end"))
-
-	Comment("compute bitwise AND and save the value back to *x")
-	MOVQ(x.Offset(0), w)
-	ANDQ(y.Offset(0), w)
-	MOVQ(w, x.Offset(0))
+	Comment("compute x & y, and save value to x")
+	MOVQ(x.Offset(0), t)
+	ANDQ(y.Offset(0), t)
+	MOVQ(t, x.Offset(0))
 
 	Comment("move pointer")
 	ADDQ(U32(8), x.Base)
 	ADDQ(U32(8), y.Base)
 
-	Comment("number of left elements")
-	SUBQ(U32(8), n) // 256/8//8
-	JMP(LabelRef("loop8"))
-
-	// ------------------
+	CMPQ(x.Base, end0)
+	JB(LabelRef("loop8"))
 
 	Comment("--------------------------------------------")
 
-	Label("end")
-
-	MOVQ(x.Offset(0), w)
-	ANDQ(y.Offset(0), w)
-	MOVQ(w, x.Offset(0))
+	Comment("left elements (<8)")
+	MOVQ(x.Offset(0), t)
+	ANDQ(y.Offset(0), t)
+	MOVQ(t, x.Offset(0))
 
 	RET()
 
