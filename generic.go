@@ -1,6 +1,6 @@
 package pand
 
-func andGeneric0(x []byte, y []byte) {
+func andInplaceGeneric0(x []byte, y []byte) {
 	if len(x) != len(y) {
 		panic("x and y should have equal length")
 	}
@@ -10,7 +10,7 @@ func andGeneric0(x []byte, y []byte) {
 	}
 }
 
-func andGeneric(x []byte, y []byte) {
+func andInplaceGeneric(x []byte, y []byte) {
 	if len(x) != len(y) {
 		panic("x and y should have equal length")
 	}
@@ -37,6 +37,37 @@ func andGeneric(x []byte, y []byte) {
 	}
 	for _, b := range y {
 		x[k] &= b
+		k++
+	}
+}
+
+func andGeneric(r []byte, x []byte, y []byte) {
+	if !(len(x) != len(y) && len(r) == len(x)) {
+		panic("x and y should have equal length")
+	}
+
+	k := 0
+	for len(y) >= 8 { // unroll loop
+		r[k] = x[k] & y[0]
+		k++
+		r[k] = x[k] & y[1]
+		k++
+		r[k] = x[k] & y[2]
+		k++
+		r[k] = x[k] & y[3]
+		k++
+		r[k] = x[k] & y[4]
+		k++
+		r[k] = x[k] & y[5]
+		k++
+		r[k] = x[k] & y[6]
+		k++
+		r[k] = x[k] & y[7]
+		k++
+		y = y[8:]
+	}
+	for _, b := range y {
+		r[k] = x[k] & b
 		k++
 	}
 }

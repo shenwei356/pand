@@ -1,9 +1,12 @@
 # Bitwise AND operation on two []byte
 
+[![GoDoc](https://godoc.org/github.com/shenwei356/pand?status.svg)](https://pkg.go.dev/github.com/shenwei356/pand)
+[![Go Report Card](https://goreportcard.com/badge/github.com/shenwei356/pand)](https://goreportcard.com/report/github.com/shenwei356/pand)
+
 ## Introduction
 
 This package provides a vectorised function which performs
-bitwise AND operation on every pair of elements in two byte-slices
+bitwise AND operation on every pair of elements in two byte-slices.
 
 The generic Go code is below, and unrolling the `for` loop could
 increase the speed. 
@@ -32,16 +35,20 @@ go get -u github.com/shenwei356/pand
 x := []byte{0b01, 0b11, 0b101}
 y := []byte{0b10, 0b10, 0b111}
 
-pand.AND(x, y)
-
+pand.AndIplace(x, y)
 fmt.Println(x) // [0 2 5]
+
+
+r := make([]byte, len(x))
+pand.AND(r, x, y)
+fmt.Println(r) // [0 2 5]
 
 ```
 
 Generate Go assembly code
 
 ```
-go run asmAvx.go -out pandAvx_amd64.s -stubs pandAvx.go && go test .
+go run asm-AndInplaceAvx.go -out andInplaceAvx_amd64.s -stubs andInplaceAvx.go 
 
 ```
 

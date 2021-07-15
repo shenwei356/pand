@@ -60,12 +60,12 @@ func TestGoAsm(t *testing.T) {
 	}
 
 	// fmt.Println(len(a), cap(a), a)
-	AND(a, b)
+	AndInplace(a, b)
 	// fmt.Println(AND(a, b))
 	// fmt.Println(len(a), cap(a), a)
 }
 
-func TestAll(t *testing.T) {
+func TestAndInplace(t *testing.T) {
 	for i := range data {
 		x := data[i][0]
 		size := len(x)
@@ -75,11 +75,11 @@ func TestAll(t *testing.T) {
 
 		and1 := make([]byte, size)
 		copy(and1, x)
-		loop(and1, y)
+		andInplaceGeneric0(and1, y)
 
 		and2 := make([]byte, size)
 		copy(and2, x)
-		unroll(and2, y)
+		andInplaceGeneric(and2, y)
 
 		if !bytes.Equal(and1, and2) {
 			t.Errorf("oh no")
@@ -87,7 +87,7 @@ func TestAll(t *testing.T) {
 
 		and3 := make([]byte, size)
 		copy(and3, x)
-		grailbio(and3, y)
+		simd.AndUnsafeInplace(and3, y)
 
 		if !bytes.Equal(and1, and3) {
 			t.Errorf("oh no, grailbio error")
@@ -95,7 +95,7 @@ func TestAll(t *testing.T) {
 
 		and4 := make([]byte, size)
 		copy(and4, x)
-		goasm(and4, y)
+		AndInplace(and4, y)
 
 		if !bytes.Equal(and1, and4) {
 			t.Errorf("oh no, goasm error")
@@ -108,47 +108,6 @@ func TestAll(t *testing.T) {
 	}
 }
 
-func loop(x, y []byte) {
-	for k, b := range y {
-		x[k] &= b
-	}
-}
-
-func unroll(x, y []byte) {
-	k := 0
-	for len(y) >= 8 { // unroll loop
-		x[k] &= y[0]
-		k++
-		x[k] &= y[1]
-		k++
-		x[k] &= y[2]
-		k++
-		x[k] &= y[3]
-		k++
-		x[k] &= y[4]
-		k++
-		x[k] &= y[5]
-		k++
-		x[k] &= y[6]
-		k++
-		x[k] &= y[7]
-		k++
-		y = y[8:]
-	}
-	for _, b := range y {
-		x[k] &= b
-		k++
-	}
-}
-
-func grailbio(x, y []byte) {
-	simd.AndUnsafeInplace(x, y)
-}
-
-func goasm(x, y []byte) {
-	AND(x, y)
-}
-
 func BenchmarkLoop(b *testing.B) {
 	for i := range data2 {
 		size := len(data2[i][0])
@@ -159,7 +118,7 @@ func BenchmarkLoop(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				loop(and, y)
+				andInplaceGeneric0(and, y)
 			}
 		})
 	}
@@ -175,7 +134,7 @@ func BenchmarkUnrollLoop(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				unroll(and, y)
+				andInplaceGeneric(and, y)
 			}
 		})
 	}
@@ -191,7 +150,7 @@ func BenchmarkGrailbio(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				grailbio(and, y)
+				simd.AndUnsafeInplace(and, y)
 			}
 		})
 	}
@@ -207,7 +166,7 @@ func BenchmarkGoAsm(b *testing.B) {
 			for j := 0; j < b.N; j++ {
 				copy(and, x)
 
-				goasm(and, y)
+				AndInplace(and, y)
 			}
 		})
 	}

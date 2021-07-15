@@ -5,4 +5,6 @@
 
 package pand
 
+var andInplaceGenerics = []andInplaceImpl{{andInplaceGeneric, "generic", true}}
+
 var andGenerics = []andImpl{{andGeneric, "generic", true}}
