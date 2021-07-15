@@ -2,9 +2,9 @@
 
 #include "textflag.h"
 
-// func PAND(x []byte, y []byte)
+// func AND(x []byte, y []byte)
 // Requires: AVX
-TEXT ·PAND(SB), NOSPLIT|NOPTR, $0-48
+TEXT ·AND(SB), NOSPLIT|NOPTR, $0-48
 	// pointer of x
 	MOVQ x_base+0(FP), AX
 

@@ -2,4 +2,4 @@
 
 package pand
 
-func PAND(x []byte, y []byte)
+func AND(x []byte, y []byte)

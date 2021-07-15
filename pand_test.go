@@ -25,7 +25,7 @@ func init() {
 	}
 
 	// for benchmark
-	sizes2 := []int{7, 8, 9, 15, 16, 17, 31, 32, 33, 128, 1 << 8, 1 << 10, 1 << 16}
+	sizes2 := []int{7, 8, 9, 15, 16, 17, 31, 32, 33, 128, 1 << 8, 1 << 10, 1 << 14}
 
 	data2 = make([][2][]byte, len(sizes2))
 	for i, s := range sizes2 {
@@ -60,8 +60,8 @@ func TestGoAsm(t *testing.T) {
 	}
 
 	// fmt.Println(len(a), cap(a), a)
-	PAND(a, b)
-	// fmt.Println(PAND(a, b))
+	AND(a, b)
+	// fmt.Println(AND(a, b))
 	// fmt.Println(len(a), cap(a), a)
 }
 
@@ -146,7 +146,7 @@ func grailbio(x, y []byte) {
 }
 
 func goasm(x, y []byte) {
-	PAND(x, y)
+	AND(x, y)
 }
 
 func BenchmarkLoop(b *testing.B) {
