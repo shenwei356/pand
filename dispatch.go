@@ -35,6 +35,7 @@ var andFunc = func() func(r []byte, x []byte, y []byte) {
 	panic("no implementation available")
 }()
 
+// AndInplace computes x[i] &= y[i] .
 func AndInplace(x []byte, y []byte) {
 	if len(x) != len(y) {
 		panic("pand: byte slices should have equal length")
@@ -43,10 +44,13 @@ func AndInplace(x []byte, y []byte) {
 	andInplaceFunc(x, y)
 }
 
+// AndUnsafeInplace computes x[i] &= y[i] .
+// But it does not check length for performance!
 func AndUnsafeInplace(x []byte, y []byte) {
 	andInplaceFunc(x, y)
 }
 
+// And computes r[i] = x[i] & y[i] .
 func And(r []byte, x []byte, y []byte) {
 	if !(len(x) == len(y) && len(r) == len(x)) {
 		panic("pand: byte slices should have equal length")
@@ -55,6 +59,8 @@ func And(r []byte, x []byte, y []byte) {
 	andFunc(r, x, y)
 }
 
+// AndUnsafe computes r[i] = x[i] & y[i] .
+// But it does not check length for performance!
 func AndUnsafe(r []byte, x []byte, y []byte) {
 	andFunc(r, x, y)
 }

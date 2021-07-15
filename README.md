@@ -13,9 +13,15 @@ increase the speed.
 
 
 ```
-func AND(x, y []byte) {
+func AndInplace(x, y []byte) {
 	for k, b := range y {
 		x[k] &= b
+	}
+}
+
+func And(r, x, y []byte) {
+	for i, b := range x {
+		r[i] = b & y[i]
 	}
 }
 ```
