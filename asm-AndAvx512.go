@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	TEXT("andAvx", NOSPLIT|NOPTR, "func(r []byte, x []byte, y []byte)")
+	TEXT("andAvx512", NOSPLIT|NOPTR, "func(r []byte, x []byte, y []byte)")
 
 	Comment("pointer of r")
 	r := Mem{Base: Load(Param("r").Base(), GP64())}
@@ -43,9 +43,53 @@ func main() {
 	CMPQ(n, U32(32))
 	JL(LabelRef("loop16_start"))
 
+	Comment("n < 64, jump to loop32")
+	CMPQ(n, U32(64))
+	JL(LabelRef("loop32_start"))
+
 	left := GP64()
 
 	Comment("--------------------------------------------")
+
+	Comment("end address for loop64")
+	MOVQ(end0, end)
+	SUBQ(U32(63), end)
+
+	Label("loop64")
+
+	d := YMM() // 512 bits
+
+	Comment("compute x & y, and save value to x")
+	VMOVDQU(x.Offset(0), d)
+	// VANDPS(y.Offset(0), d, d)
+	VPAND(y.Offset(0), d, d)
+	VMOVDQU(d, x.Offset(0))
+
+	Comment("move pointer")
+	ADDQ(U32(64), x.Base)
+	ADDQ(U32(64), y.Base)
+	ADDQ(U32(64), r.Base)
+
+	CMPQ(x.Base, end)
+	JL(LabelRef("loop64"))
+
+	Comment("n <= 8, jump to tail")
+	MOVQ(end0, left)
+	SUBQ(x.Base, left)
+	CMPQ(left, U32(8))
+	JLE(LabelRef("tail"))
+
+	Comment("n < 16, jump to loop8")
+	CMPQ(left, U32(16))
+	JL(LabelRef("loop8_start"))
+
+	Comment("n < 32, jump to loop16")
+	CMPQ(left, U32(32))
+	JL(LabelRef("loop16_start"))
+
+	Comment("--------------------------------------------")
+
+	Label("loop32_start")
 
 	Comment("end address for loop32")
 	MOVQ(end0, end)

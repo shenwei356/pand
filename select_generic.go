@@ -1,7 +1,7 @@
 // we adopt the similar method to choose platform relevant function from:
 // https://github.com/clausecker/pospop
 
-// +build !amd64
+//go:build !amd64
 
 package pand
 

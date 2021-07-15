@@ -44,17 +44,6 @@ fmt.Println(x) // [0 2 5]
 
 ```
 
-Generate Go assembly code
-
-```
-go run asm-AndInplaceAvx.go -out andInplaceAvx_amd64.s -stubs andInplaceAvx.go 
-
-go run asm-AndAvx.go -out andAvx_amd64.s -stubs andAvx.go 
-
-go test .
-
-```
-
 ## Benchmark
 
 ```
@@ -106,6 +95,67 @@ BenchmarkAndInplaceUnrollLoop        64.00_KB         24819 ns/op
 BenchmarkAndInplaceLoop              64.00_KB         25852 ns/op
 
 ```
+
+### For developers
+
+Generate Go assembly code with [avo](https://github.com/mmcloughlin/avo)
+
+```
+go run asm-AndInplaceAvx2.go -out andInplaceAvx2_amd64.s -stubs andInplaceAvx2.go
+go run asm-AndAvx2.go -out andAvx2_amd64.s -stubs andAvx2.go
+
+go test .
+```
+
+***Attention: since avo does not support Avx512 yet, we need to manuall edit
+`andAvx512_amd64.s` and `andInplaceAvx512_amd64.s`***
+
+```
+go run asm-AndInplaceAvx512.go -out andInplaceAvx512_amd64.s -stubs andInplaceAvx512.go
+go run asm-AndAvx512.go -out andAvx512_amd64.s -stubs andAvx512.go
+
+```
+
+For `andInplaceAvx512_amd64.s`, Change
+
+```
+loop64:
+	// compute x & y, and save value to x
+	VMOVDQU (AX), Y0
+	VPAND   (DX), T0, T0
+	VMOVDQU T0, (AX)
+```
+
+to
+
+```
+loop64:
+	// compute x & y, and save value to x
+	VMOVDQU64 (AX), Z0
+	VPANDQ   (DX), Z0, Z0
+	VMOVDQU64 Z0, (AX)
+```
+
+For `andAvx512_amd64.s`, Change
+
+```
+loop64:
+	// compute x & y, and save value to x
+	VMOVDQU (CX), Y0
+	VPAND   (BX), Y0, Y0
+	VMOVDQU Y0, (CX)
+```
+
+to
+
+```
+loop64:
+	// compute x & y, and save value to x
+	VMOVDQU64 (CX), Z0
+	VPANDQ   (BX), Z0, Z0
+	VMOVDQU64 Z0, (AX)
+```
+
 
 ## Credits
 
