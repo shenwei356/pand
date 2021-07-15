@@ -3,7 +3,7 @@
 #include "textflag.h"
 
 // func andAvx(r []byte, x []byte, y []byte)
-// Requires: AVX
+// Requires: AVX, AVX2
 TEXT ·andAvx(SB), NOSPLIT|NOPTR, $0-72
 	// pointer of r
 	MOVQ r_base+0(FP), AX
@@ -43,7 +43,7 @@ TEXT ·andAvx(SB), NOSPLIT|NOPTR, $0-72
 loop32:
 	// compute x & y, and save value to x
 	VMOVDQU (CX), Y0
-	VANDPS  (BX), Y0, Y0
+	VPAND   (BX), Y0, Y0
 	VMOVDQU Y0, (AX)
 
 	// move pointer
@@ -72,7 +72,7 @@ loop16_start:
 loop16:
 	// compute x & y, and save value to x
 	VMOVDQU (CX), X0
-	VANDPS  (BX), X0, X0
+	VPAND   (BX), X0, X0
 	VMOVDQU X0, (AX)
 
 	// move pointer

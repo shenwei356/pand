@@ -12,9 +12,12 @@ func BenchmarkAndInplaceLoop(b *testing.B) {
 		size := len(data2[i][0])
 		x := data2[i][0]
 		y := data2[i][1]
+
+		and := make([]byte, size)
+		copy(and, x)
 		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
 			for j := 0; j < b.N; j++ {
-				andInplaceGeneric0(x, y)
+				andInplaceGeneric0(and, y)
 			}
 		})
 	}
@@ -25,9 +28,12 @@ func BenchmarkAndInplaceUnrollLoop(b *testing.B) {
 		size := len(data2[i][0])
 		x := data2[i][0]
 		y := data2[i][1]
+
+		and := make([]byte, size)
+		copy(and, x)
 		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
 			for j := 0; j < b.N; j++ {
-				andInplaceGeneric(x, y)
+				andInplaceGeneric(and, y)
 			}
 		})
 	}
@@ -38,9 +44,12 @@ func BenchmarkAndInplaceGrailbio(b *testing.B) {
 		size := len(data2[i][0])
 		x := data2[i][0]
 		y := data2[i][1]
+
+		and := make([]byte, size)
+		copy(and, x)
 		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
 			for j := 0; j < b.N; j++ {
-				simd.AndUnsafeInplace(x, y)
+				simd.AndUnsafeInplace(and, y)
 			}
 		})
 	}
@@ -51,9 +60,12 @@ func BenchmarkAndInplaceGoAsm(b *testing.B) {
 		size := len(data2[i][0])
 		x := data2[i][0]
 		y := data2[i][1]
+
+		and := make([]byte, size)
+		copy(and, x)
 		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
 			for j := 0; j < b.N; j++ {
-				AndUnsafeInplace(x, y)
+				AndUnsafeInplace(and, y)
 			}
 		})
 	}

@@ -24,7 +24,7 @@ func init() {
 	}
 
 	// for benchmark
-	sizes2 := []int{8, 16, 32, 128, 1 << 8, 1 << 10, 1 << 14}
+	sizes2 := []int{8, 16, 32, 128, 512, 1 << 16}
 
 	data2 = make([][2][]byte, len(sizes2))
 	for i, s := range sizes2 {

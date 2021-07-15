@@ -55,7 +55,8 @@ func main() {
 
 	Comment("compute x & y, and save value to x")
 	VMOVDQU(x.Offset(0), s)
-	VANDPS(y.Offset(0), s, s)
+	// VANDPS(y.Offset(0), s, s)
+	VPAND(y.Offset(0), s, s)
 	VMOVDQU(s, x.Offset(0))
 
 	Comment("move pointer")
@@ -89,7 +90,8 @@ func main() {
 
 	Comment("compute x & y, and save value to x")
 	VMOVDQU(x.Offset(0), h)
-	VANDPS(y.Offset(0), h, h)
+	// VANDPS(y.Offset(0), h, h)
+	VPAND(y.Offset(0), h, h)
 	VMOVDQU(h, x.Offset(0))
 
 	Comment("move pointer")
