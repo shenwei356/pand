@@ -1,6 +1,13 @@
 # Bitwise AND operation on two []byte
 
-The generic code:
+## Introduction
+
+This package provides a vectorised function which performs
+bitwise AND operation on every pair of elements in two byte-slices
+
+The generic Go code is below, and unrolling the `for` loop could
+increase the speed. 
+
 
 ```
 func AND(x, y []byte) {
@@ -8,17 +15,37 @@ func AND(x, y []byte) {
 		x[k] &= b
 	}
 }
+```
+
+[grailbio/base](https://github.com/grailbio/base/blob/master/simd/and_amd64.go)
+provides a faster pure Go implementation `AndUnsafeInplace` ultlizing `unsafe` package.
+
+The solution here (`pand.AND`) is faster than `AndUnsafeInplace` for `[]byte`  with 32 or more elements.
+
+see [benchmark](#benchmark).
+
+## Getting started
+
+```
+go get -u github.com/shenwei356/pand
+
+x := []byte{0b01, 0b11, 0b101}
+y := []byte{0b10, 0b10, 0b111}
+
+pand.AND(x, y)
+
+fmt.Println(x) // [0 2 5]
 
 ```
 
-Generate Go assembly code:
+Generate Go assembly code
 
 ```
-go run asm.go -out pand.s -stubs stub.go && go test .
+go run asmAvx.go -out pandAvx_amd64.s -stubs pandAvx.go && go test .
 
 ```
 
-Benchmark
+## Benchmark
 
 ```
 go test . -bench=Benchmark* | tee t.txt
@@ -73,3 +100,15 @@ BenchmarkUnrollLoop        16.00_KB         7007 ns/op
 BenchmarkLoop              16.00_KB         8623 ns/op
 
 ```
+
+## Credits
+
+- Go assembly code was generated with [avo](https://github.com/mmcloughlin/avo).
+- [Peter Cordes](https://stackoverflow.com/users/224132/peter-cordes)
+  provided valuable suggestions on the Assembly language
+  in this [post](https://stackoverflow.com/questions/68280854/).
+- We copied and edited dispatching code from [pospop](https://github.com/clausecker/pospop).
+
+## License
+
+[MIT License](https://github.com/shenwei356/pand/blob/master/LICENSE)
