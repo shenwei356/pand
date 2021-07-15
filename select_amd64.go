@@ -13,6 +13,6 @@ var andInplaceFuncs = []andInplaceImpl{
 
 var andFuncs = []andImpl{
 	// {andAvx512, cpu.X86.HasBMI2 && cpu.X86.HasAVX512BW},
-	// {andAvx, "avx", cpu.X86.HasAVX},
+	{andAvx, "avx", cpu.X86.HasAVX},
 	{andGeneric, "generic", true},
 }

@@ -36,9 +36,25 @@ var andFunc = func() func(r []byte, x []byte, y []byte) {
 }()
 
 func AndInplace(x []byte, y []byte) {
+	if len(x) != len(y) {
+		panic("pand: byte slices should have equal length")
+	}
+
+	andInplaceFunc(x, y)
+}
+
+func AndUnsafeInplace(x []byte, y []byte) {
 	andInplaceFunc(x, y)
 }
 
 func And(r []byte, x []byte, y []byte) {
+	if !(len(x) == len(y) && len(r) == len(x)) {
+		panic("pand: byte slices should have equal length")
+	}
+
+	andFunc(r, x, y)
+}
+
+func AndUnsafe(r []byte, x []byte, y []byte) {
 	andFunc(r, x, y)
 }

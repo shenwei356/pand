@@ -32,16 +32,15 @@ see [benchmark](#benchmark).
 ```
 go get -u github.com/shenwei356/pand
 
-x := []byte{0b01, 0b11, 0b101}
-y := []byte{0b10, 0b10, 0b111}
-
-pand.AndIplace(x, y)
-fmt.Println(x) // [0 2 5]
-
+x := []byte{0b01, 0b11, 0b101} // 1, 3, 5
+y := []byte{0b10, 0b10, 0b111} // 2, 2, 7
 
 r := make([]byte, len(x))
-pand.AND(r, x, y)
+pand.And(r, x, y)
 fmt.Println(r) // [0 2 5]
+
+pand.AndInplace(x, y)
+fmt.Println(x) // [0 2 5]
 
 ```
 
@@ -49,6 +48,10 @@ Generate Go assembly code
 
 ```
 go run asm-AndInplaceAvx.go -out andInplaceAvx_amd64.s -stubs andInplaceAvx.go 
+
+go run asm-AndAvx.go -out andAvx_amd64.s -stubs andAvx.go 
+
+go test .
 
 ```
 

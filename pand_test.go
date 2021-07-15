@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/grailbio/base/simd"
-	"github.com/shenwei356/util/bytesize"
 )
 
 var data [][2][]byte
@@ -42,6 +41,16 @@ func randByteSlice(n int) []byte {
 }
 
 func TestGoAsm(t *testing.T) {
+	x := []byte{0b01, 0b11, 0b101} // 1, 3, 5
+	y := []byte{0b10, 0b10, 0b111} // 2, 2, 7
+
+	r := make([]byte, len(x))
+	And(r, x, y)
+	fmt.Println(r) // [0 2 5]
+
+	AndInplace(x, y)
+	fmt.Println(x) // [0 2 5]
+
 	a := []byte{
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
 		3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -65,13 +74,13 @@ func TestGoAsm(t *testing.T) {
 	// fmt.Println(len(a), cap(a), a)
 }
 
-func TestAndInplace(t *testing.T) {
+func TestAll(t *testing.T) {
 	for i := range data {
 		x := data[i][0]
 		size := len(x)
 		y := data[i][1]
 
-		fmt.Printf("tesing size: %d ... ", size)
+		fmt.Printf("testing size: %d ... ", size)
 
 		and1 := make([]byte, size)
 		copy(and1, x)
@@ -94,80 +103,21 @@ func TestAndInplace(t *testing.T) {
 		}
 
 		and4 := make([]byte, size)
-		copy(and4, x)
-		AndInplace(and4, y)
-
+		And(and4, x, y)
 		if !bytes.Equal(and1, and4) {
-			t.Errorf("oh no, goasm error")
-			// fmt.Println(len(and1), and1)
-			// fmt.Println(len(and4), and4)
+			t.Errorf("oh no, goasmAnd error")
+			return
+		}
+
+		and5 := make([]byte, size)
+		copy(and5, x)
+		AndInplace(and5, y)
+
+		if !bytes.Equal(and1, and5) {
+			t.Errorf("oh no, goasmAndInplace error")
 			return
 		}
 
 		fmt.Println("ok")
-	}
-}
-
-func BenchmarkLoop(b *testing.B) {
-	for i := range data2 {
-		size := len(data2[i][0])
-		x := data2[i][0]
-		y := data2[i][1]
-		and := make([]byte, size)
-		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
-			for j := 0; j < b.N; j++ {
-				copy(and, x)
-
-				andInplaceGeneric0(and, y)
-			}
-		})
-	}
-}
-
-func BenchmarkUnrollLoop(b *testing.B) {
-	for i := range data2 {
-		size := len(data2[i][0])
-		x := data2[i][0]
-		y := data2[i][1]
-		and := make([]byte, size)
-		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
-			for j := 0; j < b.N; j++ {
-				copy(and, x)
-
-				andInplaceGeneric(and, y)
-			}
-		})
-	}
-}
-
-func BenchmarkGrailbio(b *testing.B) {
-	for i := range data2 {
-		size := len(data2[i][0])
-		x := data2[i][0]
-		y := data2[i][1]
-		and := make([]byte, size)
-		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
-			for j := 0; j < b.N; j++ {
-				copy(and, x)
-
-				simd.AndUnsafeInplace(and, y)
-			}
-		})
-	}
-}
-
-func BenchmarkGoAsm(b *testing.B) {
-	for i := range data2 {
-		size := len(data2[i][0])
-		x := data2[i][0]
-		y := data2[i][1]
-		and := make([]byte, size)
-		b.Run(bytesize.ByteSize(size).String(), func(b *testing.B) {
-			for j := 0; j < b.N; j++ {
-				copy(and, x)
-
-				AndInplace(and, y)
-			}
-		})
 	}
 }

@@ -2,7 +2,7 @@ package pand
 
 func andInplaceGeneric0(x []byte, y []byte) {
 	if len(x) != len(y) {
-		panic("x and y should have equal length")
+		panic("pand: byte slices should have equal length")
 	}
 
 	for i, b := range x {
@@ -10,9 +10,19 @@ func andInplaceGeneric0(x []byte, y []byte) {
 	}
 }
 
+func andGeneric0(r []byte, x []byte, y []byte) {
+	if !(len(x) == len(y) && len(r) == len(x)) {
+		panic("pand: byte slices should have equal length")
+	}
+
+	for i, b := range x {
+		r[i] = b & y[i]
+	}
+}
+
 func andInplaceGeneric(x []byte, y []byte) {
 	if len(x) != len(y) {
-		panic("x and y should have equal length")
+		panic("pand: byte slices should have equal length")
 	}
 
 	k := 0
@@ -42,8 +52,8 @@ func andInplaceGeneric(x []byte, y []byte) {
 }
 
 func andGeneric(r []byte, x []byte, y []byte) {
-	if !(len(x) != len(y) && len(r) == len(x)) {
-		panic("x and y should have equal length")
+	if !(len(x) == len(y) && len(r) == len(x)) {
+		panic("pand: byte slices should have equal length")
 	}
 
 	k := 0
