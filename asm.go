@@ -54,9 +54,9 @@ func main() {
 	s := YMM() // 256 bits
 
 	Comment("compute x & y, and save value to x")
-	VMOVDQA(x.Offset(0), s)
+	VMOVDQU(x.Offset(0), s)
 	VANDPS(y.Offset(0), s, s)
-	VMOVDQA(s, x.Offset(0))
+	VMOVDQU(s, x.Offset(0))
 
 	Comment("move pointer")
 	ADDQ(U32(32), x.Base)
@@ -88,9 +88,9 @@ func main() {
 	h := XMM() // 128 bits
 
 	Comment("compute x & y, and save value to x")
-	VMOVDQA(x.Offset(0), h)
+	VMOVDQU(x.Offset(0), h)
 	VANDPS(y.Offset(0), h, h)
-	VMOVDQA(h, x.Offset(0))
+	VMOVDQU(h, x.Offset(0))
 
 	Comment("move pointer")
 	ADDQ(U32(16), x.Base)

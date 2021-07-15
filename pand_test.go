@@ -59,9 +59,10 @@ func TestGoAsm(t *testing.T) {
 		2, 2, 2,
 	}
 
-	fmt.Println(len(a), cap(a), a)
-	goasm(a, b)
-	fmt.Println(len(a), cap(a), a)
+	// fmt.Println(len(a), cap(a), a)
+	PAND(a, b)
+	// fmt.Println(PAND(a, b))
+	// fmt.Println(len(a), cap(a), a)
 }
 
 func TestAll(t *testing.T) {
@@ -94,9 +95,6 @@ func TestAll(t *testing.T) {
 
 		and4 := make([]byte, size)
 		copy(and4, x)
-		fmt.Println()
-		fmt.Println(len(and4), cap(and4), and4)
-		fmt.Println(len(y), cap(y), y)
 		goasm(and4, y)
 
 		if !bytes.Equal(and1, and4) {

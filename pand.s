@@ -39,9 +39,9 @@ TEXT ·PAND(SB), NOSPLIT|NOPTR, $0-48
 
 loop32:
 	// compute x & y, and save value to x
-	VMOVDQA (AX), Y0
+	VMOVDQU (AX), Y0
 	VANDPS  (DX), Y0, Y0
-	VMOVDQA Y0, (AX)
+	VMOVDQU Y0, (AX)
 
 	// move pointer
 	ADDQ $0x00000020, AX
@@ -67,9 +67,9 @@ loop16_start:
 
 loop16:
 	// compute x & y, and save value to x
-	VMOVDQA (AX), X0
+	VMOVDQU (AX), X0
 	VANDPS  (DX), X0, X0
-	VMOVDQA X0, (AX)
+	VMOVDQU X0, (AX)
 
 	// move pointer
 	ADDQ $0x00000010, AX
