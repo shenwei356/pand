@@ -6,11 +6,11 @@
 ## Introduction
 
 This package provides a vectorised function which performs
-bitwise AND operation on every pair of elements in two byte-slices.
+bitwise AND operation on all pairs of elements in two byte-slices.
+It detects CPU instruction set and chooses the available best one (AVX512, AVX2, SSE2).
 
 The generic Go code is below, and unrolling the `for` loop could
 increase the speed. 
-
 
 ```
 func AndInplace(x, y []byte) {
@@ -51,6 +51,9 @@ fmt.Println(x) // [0 2 5]
 ```
 
 ## Benchmark
+
+CPU: AMD Ryzen 7 2700X Eight-Core Processor
+Instruction set: AVX2
 
 ```
 go test . -bench=BenchmarkAnd* | tee t.txt
@@ -107,22 +110,25 @@ BenchmarkAndInplaceLoop              64.00_KB         25852 ns/op
 Generate Go assembly code with [avo](https://github.com/mmcloughlin/avo)
 
 ```
-go run asm-AndInplaceAvx2.go -out andInplaceAvx2_amd64.s -stubs andInplaceAvx2.go
-go run asm-AndAvx2.go -out andAvx2_amd64.s -stubs andAvx2.go
+go run asm-AndInplaceSSE2.go -out andInplaceSSE2_amd64.s -stubs andInplaceSSE2.go
+go run asm-AndSSE2.go -out andSSE2_amd64.s -stubs andSSE2.go
+
+go run asm-AndInplaceAVX2.go -out andInplaceAVX2_amd64.s -stubs andInplaceAVX2.go
+go run asm-AndAVX2.go -out andAVX2_amd64.s -stubs andAVX2.go
 
 go test .
 ```
 
-***Attention: since avo does not support Avx512 yet, we need to manuall edit
-`andAvx512_amd64.s` and `andInplaceAvx512_amd64.s`***
+***Attention: since avo does not support AVX512 yet, we need to manuall edit
+`andAVX512_amd64.s` and `andInplaceAVX512_amd64.s`***
 
 ```
-go run asm-AndInplaceAvx512.go -out andInplaceAvx512_amd64.s -stubs andInplaceAvx512.go
-go run asm-AndAvx512.go -out andAvx512_amd64.s -stubs andAvx512.go
+go run asm-AndInplaceAVX512.go -out andInplaceAVX512_amd64.s -stubs andInplaceAVX512.go
+go run asm-AndAVX512.go -out andAVX512_amd64.s -stubs andAVX512.go
 
 ```
 
-For `andInplaceAvx512_amd64.s`, Change
+For `andInplaceAVX512_amd64.s`, Change
 
 ```
 loop64:
@@ -142,7 +148,7 @@ loop64:
 	VMOVDQU64 Z0, (AX)
 ```
 
-For `andAvx512_amd64.s`, Change
+For `andAVX512_amd64.s`, Change
 
 ```
 loop64:

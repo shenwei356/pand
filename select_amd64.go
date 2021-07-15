@@ -6,13 +6,15 @@ package pand
 import "golang.org/x/sys/cpu"
 
 var andInplaceFuncs = []andInplaceImpl{
-	{andInplaceAvx512, "avx512", cpu.X86.HasAVX512F},
-	{andInplaceAvx2, "avx2", cpu.X86.HasAVX2},
+	{andInplaceAVX512, "AVX512", cpu.X86.HasAVX512F},
+	{andInplaceAVX2, "AVX2", cpu.X86.HasAVX2},
+	{andInplaceSSE2, "SSE2", cpu.X86.HasSSE2},
 	{andInplaceGeneric, "generic", true},
 }
 
 var andFuncs = []andImpl{
-	{andAvx512, "avx512", cpu.X86.HasAVX512F},
-	{andAvx2, "avx2", cpu.X86.HasAVX2},
+	{andAVX512, "AVX512", cpu.X86.HasAVX512F},
+	{andAVX2, "AVX2", cpu.X86.HasAVX2},
+	{andSSE2, "SSE2", cpu.X86.HasSSE2},
 	{andGeneric, "generic", true},
 }

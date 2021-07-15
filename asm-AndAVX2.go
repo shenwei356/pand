@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	TEXT("andAvx2", NOSPLIT|NOPTR, "func(r []byte, x []byte, y []byte)")
+	TEXT("andAVX2", NOSPLIT|NOPTR, "func(r []byte, x []byte, y []byte)")
 
 	Comment("pointer of r")
 	r := Mem{Base: Load(Param("r").Base(), GP64())}
