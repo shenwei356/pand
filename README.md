@@ -29,7 +29,7 @@ func And(r, x, y []byte) {
 [grailbio/base](https://github.com/grailbio/base/blob/master/simd/and_amd64.go)
 provides a faster pure Go implementation `AndUnsafeInplace` ultlizing `unsafe` package.
 
-The solution here (`pand.AND`) is faster than `AndUnsafeInplace` for `[]byte`  with 32 or more elements.
+The solution here (`pand.AndUnsafeInplace`) is faster than `AndUnsafeInplace` for `[]byte`  with 32 or more elements.
 
 see [benchmark](#benchmark).
 
@@ -119,7 +119,7 @@ go run asm-AndAVX2.go -out andAVX2_amd64.s -stubs andAVX2.go
 go test .
 ```
 
-***Attention: since avo does not support AVX512 yet, we need to manuall edit
+***Attention: since avo does not support AVX512 yet, we need to manually edit
 `andAVX512_amd64.s` and `andInplaceAVX512_amd64.s`***
 
 ```
