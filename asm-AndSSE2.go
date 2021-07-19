@@ -31,9 +31,9 @@ func main() {
 	Comment("end address for loop")
 	end := GP64()
 
-	Comment("n <= 8, jump to tail")
+	Comment("n < 8, jump to tail")
 	CMPQ(n, U32(8))
-	JLE(LabelRef("tail"))
+	JL(LabelRef("tail"))
 
 	Comment("n < 16, jump to loop8")
 	CMPQ(n, U32(16))
@@ -65,11 +65,11 @@ func main() {
 	CMPQ(x.Base, end)
 	JL(LabelRef("loop16"))
 
-	Comment("n <= 8, jump to tail")
+	Comment("n < 8, jump to tail")
 	MOVQ(end0, left)
 	SUBQ(x.Base, left)
 	CMPQ(left, U32(8))
-	JLE(LabelRef("tail"))
+	JL(LabelRef("tail"))
 
 	Comment("--------------------------------------------")
 
@@ -99,11 +99,23 @@ func main() {
 	Comment("--------------------------------------------")
 
 	Label("tail")
+	Comment("left elements (<8)")
 
-	Comment("left elements (<=8)")
-	MOVQ(x.Offset(0), t)
-	ANDQ(y.Offset(0), t)
-	MOVQ(t, r.Offset(0))
+	o := GP8()
+
+	CMPQ(x.Base, end0)
+	JE(LabelRef("end"))
+
+	MOVB(x.Offset(0), o)
+	ANDB(y.Offset(0), o)
+	MOVB(o, r.Offset(0))
+
+	ADDQ(U32(1), x.Base)
+	ADDQ(U32(1), y.Base)
+	ADDQ(U32(1), r.Base)
+	JMP(LabelRef("tail"))
+
+	Label("end")
 
 	RET()
 

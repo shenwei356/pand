@@ -23,9 +23,9 @@ TEXT ·andSSE2(SB), NOSPLIT|NOPTR, $0-72
 	ADDQ DX, SI
 
 	// end address for loop
-	// n <= 8, jump to tail
+	// n < 8, jump to tail
 	CMPQ DX, $0x00000008
-	JLE  tail
+	JL   tail
 
 	// n < 16, jump to loop8
 	CMPQ DX, $0x00000010
@@ -49,11 +49,11 @@ loop16:
 	CMPQ CX, DX
 	JL   loop16
 
-	// n <= 8, jump to tail
+	// n < 8, jump to tail
 	MOVQ SI, DX
 	SUBQ CX, DX
 	CMPQ DX, $0x00000008
-	JLE  tail
+	JL   tail
 
 	// --------------------------------------------
 loop8_start:
@@ -63,9 +63,9 @@ loop8_start:
 
 loop8:
 	// compute x & y, and save value to x
-	MOVQ (CX), SI
-	ANDQ (BX), SI
-	MOVQ SI, (AX)
+	MOVQ (CX), DI
+	ANDQ (BX), DI
+	MOVQ DI, (AX)
 
 	// move pointer
 	ADDQ $0x00000008, CX
@@ -76,8 +76,16 @@ loop8:
 
 	// --------------------------------------------
 tail:
-	// left elements (<=8)
-	MOVQ (CX), SI
-	ANDQ (BX), SI
-	MOVQ SI, (AX)
+	// left elements (<8)
+	CMPQ CX, SI
+	JE   end
+	MOVB (CX), DL
+	ANDB (BX), DL
+	MOVB DL, (AX)
+	ADDQ $0x00000001, CX
+	ADDQ $0x00000001, BX
+	ADDQ $0x00000001, AX
+	JMP  tail
+
+end:
 	RET

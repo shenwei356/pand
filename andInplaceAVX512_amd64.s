@@ -20,9 +20,9 @@ TEXT ·andInplaceAVX512(SB), NOSPLIT|NOPTR, $0-48
 	ADDQ CX, BX
 
 	// end address for loop
-	// n <= 8, jump to tail
+	// n < 8, jump to tail
 	CMPQ CX, $0x00000008
-	JLE  tail
+	JL   tail
 
 	// n < 16, jump to loop8
 	CMPQ CX, $0x00000010
@@ -53,11 +53,11 @@ loop64:
 	CMPQ AX, CX
 	JL   loop64
 
-	// n <= 8, jump to tail
+	// n < 8, jump to tail
 	MOVQ BX, CX
 	SUBQ AX, CX
 	CMPQ CX, $0x00000008
-	JLE  tail
+	JL   tail
 
 	// n < 16, jump to loop8
 	CMPQ CX, $0x00000010
@@ -85,11 +85,11 @@ loop32:
 	CMPQ AX, CX
 	JL   loop32
 
-	// n <= 8, jump to tail
+	// n < 8, jump to tail
 	MOVQ BX, CX
 	SUBQ AX, CX
 	CMPQ CX, $0x00000008
-	JLE  tail
+	JL   tail
 
 	// n < 16, jump to loop8
 	CMPQ CX, $0x00000010
@@ -113,11 +113,11 @@ loop16:
 	CMPQ AX, CX
 	JL   loop16
 
-	// n <= 8, jump to tail
+	// n < 8, jump to tail
 	MOVQ BX, CX
 	SUBQ AX, CX
 	CMPQ CX, $0x00000008
-	JLE  tail
+	JL   tail
 
 	// --------------------------------------------
 loop8_start:
@@ -127,9 +127,9 @@ loop8_start:
 
 loop8:
 	// compute x & y, and save value to x
-	MOVQ (AX), BX
-	ANDQ (DX), BX
-	MOVQ BX, (AX)
+	MOVQ (AX), SI
+	ANDQ (DX), SI
+	MOVQ SI, (AX)
 
 	// move pointer
 	ADDQ $0x00000008, AX
@@ -139,8 +139,15 @@ loop8:
 
 	// --------------------------------------------
 tail:
-	// left elements (<=8)
-	MOVQ (AX), BX
-	ANDQ (DX), BX
-	MOVQ BX, (AX)
+	// left elements (<8)
+	CMPQ AX, BX
+	JE   end
+	MOVB (AX), CL
+	ANDB (DX), CL
+	MOVB CL, (AX)
+	ADDQ $0x00000001, AX
+	ADDQ $0x00000001, DX
+	JMP  tail
+
+end:
 	RET
