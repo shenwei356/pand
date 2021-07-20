@@ -68,7 +68,7 @@ cat t.txt \
     | csvtk cut -t -f test,data-size,time \
     | csvtk sort -t -k data-size:N -k time:N \
     | csvtk pretty -t -s "        " \
-	| perl -pe 's/\n/\n\n/ if /AndLoop/'
+    | perl -pe 's/\n/\n\n/ if /AndLoop/'
 
 rm t.txt
 
@@ -197,6 +197,8 @@ loop64:
 ## Credits
 
 - Go assembly code was generated with [avo](https://github.com/mmcloughlin/avo).
+- [Robert Clausecker](https://github.com/clausecker/) gave some great
+  [advices](https://github.com/shenwei356/pand/issues/1) on the Assembly language.
 - [Peter Cordes](https://stackoverflow.com/users/224132/peter-cordes)
   provided valuable suggestions on the Assembly language
   in this [post](https://stackoverflow.com/questions/68280854/).
