@@ -1,6 +1,8 @@
 // we adopt the similar method to choose platform relevant function from:
 // https://github.com/clausecker/pospop
 
+//go:build amd64
+
 package pand
 
 import "golang.org/x/sys/cpu"
