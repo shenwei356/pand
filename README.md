@@ -131,6 +131,8 @@ BenchmarkAndLoop                     512.00_B         271.2 ns/op
 
 ### For developers
 
+#### Generate Go assembly code
+
 Generate Go assembly code with [avo](https://github.com/mmcloughlin/avo)
 
 ```
@@ -144,7 +146,7 @@ go test . -count=1
 
 ```
 
-***Attention: since avo does not support AVX512 yet, we need to manually edit
+***Attention: since avo does not fully support AVX512 yet, we need to manually edit
 `andAVX512_amd64.s` and `andInplaceAVX512_amd64.s`***
 
 ```
@@ -193,6 +195,20 @@ loop64:
 	VMOVDQU64 Z0, (AX)
 ```
 
+#### Support other platforms like ARM64
+
+Please manually add a line below
+
+    //go:build amd64
+
+to these files, in from of the line `package pand`.
+
+	andAVX2.go
+	andAVX512.go
+	andSSE2.go
+	andInplaceAVX2.go
+	andInplaceAVX512.go
+	andInplaceSSE2.go
 
 ## Credits
 
